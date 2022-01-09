@@ -2,6 +2,9 @@
 import "./App.css";
 import { Component } from "react";
 import { nanoid } from "nanoid";
+import Form from "./form/form.jsx";
+import ContactList from "./ContactList/ContactList";
+import Filter from "./Filter/Filter.jsx";
 
 class App extends Component {
   state = {
@@ -12,23 +15,21 @@ class App extends Component {
       { id: "id-4", name: "Annie Copeland", number: "227-91-26" },
     ],
     filter: "",
-    name: "",
-    number: "",
-  };
-  handleChange = (e) => {
-    const { name, value } = e.target;
-    this.setState({ [name]: value });
   };
 
-  handleSubmit = (e) => {
-    e.preventDefault();
+  handleSubmit = (data) => {
+    const { name, number } = data;
 
-    const { name, number } = this.state;
     const contact = {
       name: name,
       number: number,
       id: nanoid(),
     };
+    {
+      this.state.contacts.find(
+        (contact) => contact.name.toLowerCase === name.toLowerCase
+      ) && alert("Такой контакт уже есть");
+    }
     {
       name &&
         number &&
@@ -36,11 +37,6 @@ class App extends Component {
           contacts: [...prevState.contacts, contact],
         }));
     }
-
-    this.reset();
-  };
-  reset = () => {
-    this.setState({ name: "", number: "" });
   };
 
   getVisibleContacts = () => {
@@ -50,57 +46,34 @@ class App extends Component {
     );
   };
 
+  handleFilter = (e) => {
+    const { value } = e.target;
+    this.setState({ filter: value });
+  };
+
+  handleDeleteContact = (id) => {
+    this.setState((prevState) => ({
+      contacts: prevState.contacts.filter((contact) => contact.id !== id),
+    }));
+  };
+
   render() {
     const visibleContacts = this.getVisibleContacts();
-    console.log(visibleContacts);
     return (
       <>
-        <form onSubmit={this.handleSubmit}>
-          <label>
-            Name <br />
-            <input
-              type="text"
-              name="name"
-              onChange={this.handleChange}
-              value={this.state.name}
-            ></input>
-            <br />
-          </label>
-          <label>
-            Number
-            <br />
-            <input
-              type="number"
-              name="number"
-              value={this.state.number}
-              onChange={this.handleChange}
-            ></input>
-          </label>
-          <br />
-          <button type="submit">Add</button>
-        </form>
+        <Form propOnSubmit={this.handleSubmit} />
         <h2>Contacts</h2>
         <label>
           Filter by name
           <br />
-          <input
-            type="text"
-            name="filter"
-            value={this.state.filter}
-            onChange={this.handleChange}
-          ></input>
+          <Filter value={this.state.filter} onChange={this.handleFilter} />
         </label>
 
         {visibleContacts.length > 0 && (
-          <ul>
-            {visibleContacts.map((contact) => {
-              return (
-                <li key={contact.id}>
-                  {contact.name} {contact.number}
-                </li>
-              );
-            })}
-          </ul>
+          <ContactList
+            contacts={visibleContacts}
+            handleDelete={this.handleDeleteContact}
+          />
         )}
       </>
     );
